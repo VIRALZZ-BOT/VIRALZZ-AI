@@ -9,7 +9,6 @@ from fastapi import Request
 from strenum import StrEnum
 
 from backend.data import integrations
-from backend.integrations.providers import ProviderName
 from backend.util.settings import Config
 
 logger = logging.getLogger(__name__)
@@ -20,7 +19,7 @@ WT = TypeVar("WT", bound=StrEnum)
 
 class BaseWebhooksManager(ABC, Generic[WT]):
     # --8<-- [start:BaseWebhooksManager1]
-    PROVIDER_NAME: ClassVar[ProviderName]
+    PROVIDER_NAME: ClassVar[str]
     # --8<-- [end:BaseWebhooksManager1]
 
     WebhookType: WT
