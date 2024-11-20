@@ -129,7 +129,9 @@ def callback(
 
 @router.get("/{provider}/credentials")
 def list_credentials(
-    provider: Annotated[str, Path(title="The provider to list credentials for")],
+    provider: Annotated[
+        ProviderName, Path(title="The provider to list credentials for")
+    ],
     user_id: Annotated[str, Depends(get_user_id)],
 ) -> list[CredentialsMetaResponse]:
     credentials = creds_manager.store.get_creds_by_provider(user_id, provider)
@@ -147,7 +149,9 @@ def list_credentials(
 
 @router.get("/{provider}/credentials/{cred_id}")
 def get_credential(
-    provider: Annotated[str, Path(title="The provider to retrieve credentials for")],
+    provider: Annotated[
+        ProviderName, Path(title="The provider to retrieve credentials for")
+    ],
     cred_id: Annotated[str, Path(title="The ID of the credentials to retrieve")],
     user_id: Annotated[str, Depends(get_user_id)],
 ) -> Credentials:
@@ -164,7 +168,9 @@ def get_credential(
 @router.post("/{provider}/credentials", status_code=201)
 def create_api_key_credentials(
     user_id: Annotated[str, Depends(get_user_id)],
-    provider: Annotated[str, Path(title="The provider to create credentials for")],
+    provider: Annotated[
+        ProviderName, Path(title="The provider to create credentials for")
+    ],
     api_key: Annotated[str, Body(title="The API key to store")],
     title: Annotated[str, Body(title="Optional title for the credentials")],
     expires_at: Annotated[
@@ -199,7 +205,9 @@ class CredentialsDeletionResponse(BaseModel):
 @router.delete("/{provider}/credentials/{cred_id}")
 def delete_credentials(
     request: Request,
-    provider: Annotated[str, Path(title="The provider to delete credentials for")],
+    provider: Annotated[
+        ProviderName, Path(title="The provider to delete credentials for")
+    ],
     cred_id: Annotated[str, Path(title="The ID of the credentials to delete")],
     user_id: Annotated[str, Depends(get_user_id)],
 ) -> CredentialsDeletionResponse:
