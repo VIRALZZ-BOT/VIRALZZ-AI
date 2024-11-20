@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from autogpt_libs.supabase_integration_credentials_store.types import (
     APIKeyCredentials,
@@ -18,11 +18,14 @@ from backend.data.integrations import (
 )
 from backend.executor.manager import ExecutionManager
 from backend.integrations.creds_manager import IntegrationCredentialsManager
-from backend.integrations.oauth import HANDLERS_BY_NAME, BaseOAuthHandler
+from backend.integrations.oauth import HANDLERS_BY_NAME
 from backend.integrations.providers import ProviderName
 from backend.integrations.webhooks import WEBHOOK_MANAGERS_BY_NAME
 from backend.util.service import get_service_client
 from backend.util.settings import Settings
+
+if TYPE_CHECKING:
+    from backend.integrations.oauth import BaseOAuthHandler
 
 from ..utils import get_user_id
 
@@ -284,7 +287,7 @@ async def webhook_ping(
 # --------------------------- UTILITIES ---------------------------- #
 
 
-def _get_provider_oauth_handler(req: Request, provider_name: str) -> BaseOAuthHandler:
+def _get_provider_oauth_handler(req: Request, provider_name: str) -> "BaseOAuthHandler":
     if provider_name not in HANDLERS_BY_NAME:
         raise HTTPException(
             status_code=404, detail=f"Unknown provider '{provider_name}'"

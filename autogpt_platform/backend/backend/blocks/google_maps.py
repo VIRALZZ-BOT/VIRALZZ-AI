@@ -6,6 +6,7 @@ from pydantic import BaseModel, SecretStr
 
 from backend.data.block import Block, BlockCategory, BlockOutput, BlockSchema
 from backend.data.model import CredentialsField, CredentialsMetaInput, SchemaField
+from backend.integrations.providers import ProviderName
 
 TEST_CREDENTIALS = APIKeyCredentials(
     id="01234567-89ab-cdef-0123-456789abcdef",
@@ -34,7 +35,7 @@ class Place(BaseModel):
 class GoogleMapsSearchBlock(Block):
     class Input(BlockSchema):
         credentials: CredentialsMetaInput[
-            Literal["google_maps"], Literal["api_key"]
+            Literal[ProviderName.GOOGLE_MAPS], Literal["api_key"]
         ] = CredentialsField(description="Google Maps API Key")
         query: str = SchemaField(
             description="Search query for local businesses",

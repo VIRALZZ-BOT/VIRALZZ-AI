@@ -9,6 +9,7 @@ from replicate.helpers import FileOutput
 
 from backend.data.block import Block, BlockCategory, BlockOutput, BlockSchema
 from backend.data.model import CredentialsField, CredentialsMetaInput, SchemaField
+from backend.integrations.providers import ProviderName
 
 TEST_CREDENTIALS = APIKeyCredentials(
     id="01234567-89ab-cdef-0123-456789abcdef",
@@ -51,7 +52,7 @@ class ImageType(str, Enum):
 class ReplicateFluxAdvancedModelBlock(Block):
     class Input(BlockSchema):
         credentials: CredentialsMetaInput[
-            Literal["replicate"], Literal["api_key"]
+            Literal[ProviderName.REPLICATE], Literal["api_key"]
         ] = CredentialsField(
             description="The Replicate integration can be used with "
             "any API key with sufficient permissions for the blocks it is used on.",

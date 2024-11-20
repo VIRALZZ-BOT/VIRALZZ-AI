@@ -22,6 +22,7 @@ from pydantic_core import (
     core_schema,
 )
 
+from backend.integrations.providers import ProviderName
 from backend.util.settings import Secrets
 
 if TYPE_CHECKING:
@@ -152,7 +153,7 @@ def SchemaField(
     )
 
 
-CP = TypeVar("CP", bound=str)
+CP = TypeVar("CP", bound=ProviderName)
 CT = TypeVar("CT", bound=CredentialsType)
 
 

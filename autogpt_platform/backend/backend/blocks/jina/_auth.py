@@ -4,10 +4,11 @@ from autogpt_libs.supabase_integration_credentials_store.types import APIKeyCred
 from pydantic import SecretStr
 
 from backend.data.model import CredentialsField, CredentialsMetaInput
+from backend.integrations.providers import ProviderName
 
 JinaCredentials = APIKeyCredentials
 JinaCredentialsInput = CredentialsMetaInput[
-    Literal["jina"],
+    Literal[ProviderName.JINA],
     Literal["api_key"],
 ]
 

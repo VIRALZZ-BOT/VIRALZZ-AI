@@ -7,6 +7,7 @@ from requests.exceptions import RequestException
 
 from backend.data.block import Block, BlockCategory, BlockOutput, BlockSchema
 from backend.data.model import CredentialsField, CredentialsMetaInput, SchemaField
+from backend.integrations.providers import ProviderName
 from backend.util.request import requests
 
 TEST_CREDENTIALS = APIKeyCredentials(
@@ -80,7 +81,7 @@ class UpscaleOption(str, Enum):
 class IdeogramModelBlock(Block):
     class Input(BlockSchema):
         credentials: CredentialsMetaInput[
-            Literal["ideogram"], Literal["api_key"]
+            Literal[ProviderName.IDEOGRAM], Literal["api_key"]
         ] = CredentialsField(
             description="The Ideogram integration can be used with any API key with sufficient permissions for the blocks it is used on.",
         )

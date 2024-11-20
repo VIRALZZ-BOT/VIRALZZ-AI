@@ -9,6 +9,7 @@ from pydantic import SecretStr
 
 from backend.data.block import Block, BlockCategory, BlockOutput, BlockSchema
 from backend.data.model import CredentialsField, CredentialsMetaInput, SchemaField
+from backend.integrations.providers import ProviderName
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,7 @@ class NormalizationStrategy(str, Enum):
 class AIMusicGeneratorBlock(Block):
     class Input(BlockSchema):
         credentials: CredentialsMetaInput[
-            Literal["replicate"], Literal["api_key"]
+            Literal[ProviderName.REPLICATE], Literal["api_key"]
         ] = CredentialsField(
             description="The Replicate integration can be used with "
             "any API key with sufficient permissions for the blocks it is used on.",

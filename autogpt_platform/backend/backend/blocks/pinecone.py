@@ -6,10 +6,11 @@ from pinecone import Pinecone, ServerlessSpec
 
 from backend.data.block import Block, BlockCategory, BlockOutput, BlockSchema
 from backend.data.model import CredentialsField, CredentialsMetaInput, SchemaField
+from backend.integrations.providers import ProviderName
 
 PineconeCredentials = APIKeyCredentials
 PineconeCredentialsInput = CredentialsMetaInput[
-    Literal["pinecone"],
+    Literal[ProviderName.PINECONE],
     Literal["api_key"],
 ]
 
