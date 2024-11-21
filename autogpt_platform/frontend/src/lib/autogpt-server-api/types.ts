@@ -115,6 +115,7 @@ export const PROVIDER_NAMES = {
   OPEN_ROUTER: "open_router",
   PINECONE: "pinecone",
   REPLICATE: "replicate",
+  FAL: "fal",
   REVID: "revid",
   UNREAL_SPEECH: "unreal_speech",
 } as const;
