@@ -3,16 +3,15 @@ import { withSentryConfig } from "@sentry/nextjs";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["images.unsplash.com"],
-  },
-  async redirects() {
-    return [
-      {
-        source: "/monitor", // FIXME: Remove after 2024-09-01
-        destination: "/",
-        permanent: false,
-      },
-    ];
+    domains: [
+      "images.unsplash.com",
+      "ddz4ak4pa3d19.cloudfront.net",
+      "upload.wikimedia.org",
+
+      "picsum.photos", // for placeholder images
+      "dummyimage.com", // for placeholder images
+      "placekitten.com", // for placeholder images
+    ],
   },
   output: "standalone",
   // TODO: Re-enable TypeScript checks once current issues are resolved
