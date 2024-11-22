@@ -28,7 +28,11 @@ class GitHubTriggerBase:
     class Input(BlockSchema):
         credentials: GithubCredentialsInput = GithubCredentialsField("repo")
         repo: str = SchemaField(
-            description="Repository to subscribe to",
+            description=(
+                "Repository to subscribe to.\n\n"
+                "**Note:** Make sure your GitHub credentials have permissions "
+                "to create webhooks on this repo."
+            ),
             placeholder="{owner}/{repo}",
         )
         # --8<-- [start:example-payload-field]
@@ -36,9 +40,13 @@ class GitHubTriggerBase:
         # --8<-- [end:example-payload-field]
 
     class Output(BlockSchema):
-        payload: dict = SchemaField(description="Full payload of the event")
-        sender: dict = SchemaField(
-            description="Object representing the user who triggered the event"
+        payload: dict = SchemaField(
+            description="The complete webhook payload that was received from GitHub. "
+            "Includes information about the affected resource (e.g. pull request), "
+            "the event, and the user who triggered the event."
+        )
+        triggered_by_user: dict = SchemaField(
+            description="Object representing the GitHub user who triggered the event"
         )
         error: str = SchemaField(
             description="Error message if the payload could not be processed"
@@ -46,7 +54,7 @@ class GitHubTriggerBase:
 
     def run(self, input_data: Input, **kwargs) -> BlockOutput:
         yield "payload", input_data.payload
-        yield "sender", input_data.payload["sender"]
+        yield "triggered_by_user", input_data.payload["sender"]
 
 
 class GithubPullRequestTriggerBlock(GitHubTriggerBase, Block):
@@ -94,11 +102,13 @@ class GithubPullRequestTriggerBlock(GitHubTriggerBase, Block):
         )
         number: int = SchemaField(description="The number of the affected pull request")
         pull_request: dict = SchemaField(
-            description="Object representing the pull request"
+            description="Object representing the affected pull request"
+        )
+        pull_request_url: str = SchemaField(
+            description="The URL of the affected pull request"
         )
 
     def __init__(self):
-        from backend.integrations.providers import ProviderName
         from backend.integrations.webhooks.github import GithubWebhookType
 
         example_payload = json.loads(self.EXAMPLE_PAYLOAD_FILE.read_text())
@@ -111,7 +121,7 @@ class GithubPullRequestTriggerBlock(GitHubTriggerBase, Block):
             output_schema=GithubPullRequestTriggerBlock.Output,
             # --8<-- [start:example-webhook_config]
             webhook_config=BlockWebhookConfig(
-                provider=ProviderName.GITHUB,
+                provider="github",
                 webhook_type=GithubWebhookType.REPO,
                 resource_format="{repo}",
                 event_filter_input="events",
@@ -127,10 +137,11 @@ class GithubPullRequestTriggerBlock(GitHubTriggerBase, Block):
             test_credentials=TEST_CREDENTIALS,
             test_output=[
                 ("payload", example_payload),
-                ("sender", example_payload["sender"]),
+                ("triggered_by_user", example_payload["sender"]),
                 ("event", example_payload["action"]),
                 ("number", example_payload["number"]),
                 ("pull_request", example_payload["pull_request"]),
+                ("pull_request_url", example_payload["pull_request"]["html_url"]),
             ],
         )
 
@@ -139,6 +150,7 @@ class GithubPullRequestTriggerBlock(GitHubTriggerBase, Block):
         yield "event", input_data.payload["action"]
         yield "number", input_data.payload["number"]
         yield "pull_request", input_data.payload["pull_request"]
+        yield "pull_request_url", input_data.payload["pull_request"]["html_url"]
 
 
 # --8<-- [end:GithubTriggerExample]

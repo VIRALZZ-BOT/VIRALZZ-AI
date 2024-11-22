@@ -9,7 +9,7 @@ from fastapi import Request
 from strenum import StrEnum
 
 from backend.data import integrations
-from backend.integrations.providers import ProviderName
+from backend.util.exceptions import MissingConfigError
 from backend.util.settings import Config
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ WT = TypeVar("WT", bound=StrEnum)
 
 class BaseWebhooksManager(ABC, Generic[WT]):
     # --8<-- [start:BaseWebhooksManager1]
-    PROVIDER_NAME: ClassVar[ProviderName]
+    PROVIDER_NAME: ClassVar[str]
     # --8<-- [end:BaseWebhooksManager1]
 
     WebhookType: WT
@@ -33,6 +33,11 @@ class BaseWebhooksManager(ABC, Generic[WT]):
         resource: str,
         events: list[str],
     ) -> integrations.Webhook:
+        if not app_config.platform_base_url:
+            raise MissingConfigError(
+                "PLATFORM_BASE_URL must be set to use Webhook functionality"
+            )
+
         if webhook := await integrations.find_webhook(
             credentials.id, webhook_type, resource, events
         ):
@@ -43,13 +48,17 @@ class BaseWebhooksManager(ABC, Generic[WT]):
 
     async def prune_webhook_if_dangling(
         self, webhook_id: str, credentials: Credentials
-    ) -> None:
+    ) -> bool:
         webhook = await integrations.get_webhook(webhook_id)
         if webhook.attached_nodes is None:
             raise ValueError("Error retrieving webhook including attached nodes")
-        if len(webhook.attached_nodes) == 0:
-            await self._deregister_webhook(webhook, credentials)
-            await integrations.delete_webhook(webhook.id)
+        if webhook.attached_nodes:
+            # Don't prune webhook if in use
+            return False
+
+        await self._deregister_webhook(webhook, credentials)
+        await integrations.delete_webhook(webhook.id)
+        return True
 
     # --8<-- [start:BaseWebhooksManager3]
     @classmethod
@@ -130,7 +139,7 @@ class BaseWebhooksManager(ABC, Generic[WT]):
     ) -> integrations.Webhook:
         id = str(uuid4())
         secret = secrets.token_hex(32)
-        provider_name = self.PROVIDER_NAME.value
+        provider_name = self.PROVIDER_NAME
         ingress_url = (
             f"{app_config.platform_base_url}/api/integrations/{provider_name}"
             f"/webhooks/{id}/ingress"

@@ -19,10 +19,12 @@ from autogpt_libs.supabase_integration_credentials_store.types import Credential
 from prisma.models import AgentBlock
 from pydantic import BaseModel
 
-from backend.integrations.providers import ProviderName
 from backend.util import json
+from backend.util.settings import Config
 
 from .model import CREDENTIALS_FIELD_NAME, ContributorDetails, CredentialsMetaInput
+
+app_config = Config()
 
 BlockData = tuple[str, Any]  # Input & Output data should be a tuple of (name, data).
 BlockInput = dict[str, Any]  # Input: 1 input pin consumes 1 data.
@@ -96,15 +98,7 @@ class BlockSchema(BaseModel):
 
     @classmethod
     def validate_data(cls, data: BlockInput) -> str | None:
-        """
-        Validate the data against the schema.
-        Returns the validation error message if the data does not match the schema.
-        """
-        try:
-            jsonschema.validate(data, cls.jsonschema())
-            return None
-        except jsonschema.ValidationError as e:
-            return str(e)
+        return json.validate_with_jsonschema(schema=cls.jsonschema(), data=data)
 
     @classmethod
     def validate_field(cls, field_name: str, data: BlockInput) -> str | None:
@@ -194,7 +188,7 @@ class EmptySchema(BlockSchema):
 
 # --8<-- [start:BlockWebhookConfig]
 class BlockWebhookConfig(BaseModel):
-    provider: ProviderName
+    provider: str
     """The service provider that the webhook connects to"""
 
     webhook_type: str
@@ -278,8 +272,8 @@ class Block(ABC, Generic[BlockSchemaInputType, BlockSchemaOutputType]):
         self.webhook_config = webhook_config
         self.execution_stats = {}
 
-        # Enforce shape of webhook event filter
         if self.webhook_config:
+            # Enforce shape of webhook event filter
             event_filter_field = self.input_schema.model_fields[
                 self.webhook_config.event_filter_input
             ]
@@ -295,10 +289,16 @@ class Block(ABC, Generic[BlockSchemaInputType, BlockSchemaOutputType]):
                     f"{self.name} has an invalid webhook event selector: "
                     "field must be a BaseModel and all its fields must be boolean"
                 )
+
+            # Enforce presence of 'payload' input
             if "payload" not in self.input_schema.model_fields:
                 raise TypeError(
                     f"{self.name} is webhook-triggered but has no 'payload' input"
                 )
+
+            # Disable webhook-triggered block if webhook functionality not available
+            if not app_config.platform_base_url:
+                self.disabled = True
 
     @classmethod
     def create(cls: Type["Block"]) -> "Block":
