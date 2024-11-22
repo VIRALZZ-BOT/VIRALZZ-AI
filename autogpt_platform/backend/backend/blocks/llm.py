@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Any, List, Literal, NamedTuple
 from autogpt_libs.supabase_integration_credentials_store.types import APIKeyCredentials
 from pydantic import SecretStr
 
+from backend.integrations.providers import ProviderName
+
 if TYPE_CHECKING:
     from enum import _EnumMemberT
 
@@ -30,7 +32,13 @@ logger = logging.getLogger(__name__)
 #     "ollama": BlockSecret(value=""),
 # }
 
-LLMProviderName = Literal["anthropic", "groq", "openai", "ollama", "open_router"]
+LLMProviderName = Literal[
+    ProviderName.ANTHROPIC,
+    ProviderName.GROQ,
+    ProviderName.OLLAMA,
+    ProviderName.OPENAI,
+    ProviderName.OPEN_ROUTER,
+]
 AICredentials = CredentialsMetaInput[LLMProviderName, Literal["api_key"]]
 
 TEST_CREDENTIALS = APIKeyCredentials(
@@ -51,8 +59,6 @@ TEST_CREDENTIALS_INPUT = {
 def AICredentialsField() -> AICredentials:
     return CredentialsField(
         description="API key for the LLM provider.",
-        provider=["anthropic", "groq", "openai", "ollama", "open_router"],
-        supported_credential_types={"api_key"},
         discriminator="model",
         discriminator_mapping={
             model.value: model.metadata.provider for model in LlmModel

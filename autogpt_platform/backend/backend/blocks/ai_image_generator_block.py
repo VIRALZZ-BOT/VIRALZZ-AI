@@ -8,6 +8,7 @@ from replicate.helpers import FileOutput
 
 from backend.data.block import Block, BlockCategory, BlockSchema
 from backend.data.model import CredentialsField, CredentialsMetaInput, SchemaField
+from backend.integrations.providers import ProviderName
 
 
 class ImageSize(str, Enum):
@@ -97,12 +98,10 @@ class ImageGenModel(str, Enum):
 
 class AIImageGeneratorBlock(Block):
     class Input(BlockSchema):
-        credentials: CredentialsMetaInput[Literal["replicate"], Literal["api_key"]] = (
-            CredentialsField(
-                provider="replicate",
-                supported_credential_types={"api_key"},
-                description="Enter your Replicate API key to access the image generation API. You can obtain an API key from https://replicate.com/account/api-tokens.",
-            )
+        credentials: CredentialsMetaInput[
+            Literal[ProviderName.REPLICATE], Literal["api_key"]
+        ] = CredentialsField(
+            description="Enter your Replicate API key to access the image generation API. You can obtain an API key from https://replicate.com/account/api-tokens.",
         )
         prompt: str = SchemaField(
             description="Text prompt for image generation",

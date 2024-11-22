@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from autogpt_libs.supabase_integration_credentials_store.types import (
     APIKeyCredentials,
@@ -20,11 +20,15 @@ from backend.data.integrations import (
 )
 from backend.executor.manager import ExecutionManager
 from backend.integrations.creds_manager import IntegrationCredentialsManager
-from backend.integrations.oauth import HANDLERS_BY_NAME, BaseOAuthHandler
+from backend.integrations.oauth import HANDLERS_BY_NAME
+from backend.integrations.providers import ProviderName
 from backend.integrations.webhooks import WEBHOOK_MANAGERS_BY_NAME
 from backend.util.exceptions import NeedConfirmation
 from backend.util.service import get_service_client
 from backend.util.settings import Settings
+
+if TYPE_CHECKING:
+    from backend.integrations.oauth import BaseOAuthHandler
 
 from ..utils import get_user_id
 
@@ -128,7 +132,9 @@ def callback(
 
 @router.get("/{provider}/credentials")
 def list_credentials(
-    provider: Annotated[str, Path(title="The provider to list credentials for")],
+    provider: Annotated[
+        ProviderName, Path(title="The provider to list credentials for")
+    ],
     user_id: Annotated[str, Depends(get_user_id)],
 ) -> list[CredentialsMetaResponse]:
     credentials = creds_manager.store.get_creds_by_provider(user_id, provider)
@@ -146,7 +152,9 @@ def list_credentials(
 
 @router.get("/{provider}/credentials/{cred_id}")
 def get_credential(
-    provider: Annotated[str, Path(title="The provider to retrieve credentials for")],
+    provider: Annotated[
+        ProviderName, Path(title="The provider to retrieve credentials for")
+    ],
     cred_id: Annotated[str, Path(title="The ID of the credentials to retrieve")],
     user_id: Annotated[str, Depends(get_user_id)],
 ) -> Credentials:
@@ -163,7 +171,9 @@ def get_credential(
 @router.post("/{provider}/credentials", status_code=201)
 def create_api_key_credentials(
     user_id: Annotated[str, Depends(get_user_id)],
-    provider: Annotated[str, Path(title="The provider to create credentials for")],
+    provider: Annotated[
+        ProviderName, Path(title="The provider to create credentials for")
+    ],
     api_key: Annotated[str, Body(title="The API key to store")],
     title: Annotated[str, Body(title="Optional title for the credentials")],
     expires_at: Annotated[
@@ -204,7 +214,9 @@ class CredentialsDeletionNeedsConfirmationResponse(BaseModel):
 @router.delete("/{provider}/credentials/{cred_id}")
 async def delete_credentials(
     request: Request,
-    provider: Annotated[str, Path(title="The provider to delete credentials for")],
+    provider: Annotated[
+        ProviderName, Path(title="The provider to delete credentials for")
+    ],
     cred_id: Annotated[str, Path(title="The ID of the credentials to delete")],
     user_id: Annotated[str, Depends(get_user_id)],
     force: Annotated[
@@ -328,7 +340,7 @@ async def remove_all_webhooks_for_credentials(
             logger.warning(f"Webhook #{webhook.id} failed to prune")
 
 
-def _get_provider_oauth_handler(req: Request, provider_name: str) -> BaseOAuthHandler:
+def _get_provider_oauth_handler(req: Request, provider_name: str) -> "BaseOAuthHandler":
     if provider_name not in HANDLERS_BY_NAME:
         raise HTTPException(
             status_code=404, detail=f"Unknown provider '{provider_name}'"

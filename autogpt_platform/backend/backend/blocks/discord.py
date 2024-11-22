@@ -8,16 +8,15 @@ from pydantic import SecretStr
 
 from backend.data.block import Block, BlockCategory, BlockOutput, BlockSchema
 from backend.data.model import CredentialsField, CredentialsMetaInput, SchemaField
+from backend.integrations.providers import ProviderName
 
-DiscordCredentials = CredentialsMetaInput[Literal["discord"], Literal["api_key"]]
+DiscordCredentials = CredentialsMetaInput[
+    Literal[ProviderName.DISCORD], Literal["api_key"]
+]
 
 
 def DiscordCredentialsField() -> DiscordCredentials:
-    return CredentialsField(
-        description="Discord bot token",
-        provider="discord",
-        supported_credential_types={"api_key"},
-    )
+    return CredentialsField(description="Discord bot token")
 
 
 TEST_CREDENTIALS = APIKeyCredentials(
